@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package benbroo;
+
+option go_package = "github.com/benbroo/benbroo/pkg/grpcserver";
+
+// ==================== Messages ====================
+
+message RegisterInstanceRequest {
+  string namespace_id = 1;
+  string group_name = 2;
+  string service_name = 3;
+  string cluster_name = 4;
+  string ip = 5;
+  int32 port = 6;
+  double weight = 7;
+  bool ephemeral = 8;
+  string metadata = 9;
+}
+
+message DeregisterInstanceRequest {
+  string namespace_id = 1;
+  string group_name = 2;
+  string service_name = 3;
+  string cluster_name = 4;
+  string ip = 5;
+  int32 port = 6;
+}
+
+message HeartbeatRequest {
+  string namespace_id = 1;
+  string group_name = 2;
+  string service_name = 3;
+  string cluster_name = 4;
+  string ip = 5;
+  int32 port = 6;
+}
+
+message InstanceQuery {
+  string namespace_id = 1;
+  string group_name = 2;
+  string service_name = 3;
+  bool healthy_only = 4;
+  string clusters = 5;
+}
+
+message InstanceInfo {
+  uint64 id = 1;
+  string namespace_id = 2;
+  string group_name = 3;
+  string service_name = 4;
+  string cluster_name = 5;
+  string ip = 6;
+  int32 port = 7;
+  double weight = 8;
+  bool healthy = 9;
+  bool enabled = 10;
+  bool ephemeral = 11;
+  string metadata = 12;
+}
+
+message InstanceListResponse {
+  repeated InstanceInfo instances = 1;
+  int32 count = 2;
+}
+
+message ConfigQuery {
+  string namespace_id = 1;
+  string group_name = 2;
+  string data_id = 3;
+}
+
+message ConfigPublishRequest {
+  string namespace_id = 1;
+  string group_name = 2;
+  string data_id = 3;
+  string content = 4;
+  string type = 5;
+}
+
+message ConfigInfo {
+  string namespace_id = 1;
+  string group_name = 2;
+  string data_id = 3;
+  string content = 4;
+  string md5 = 5;
+  string type = 6;
+}
+
+message ConfigListenRequest {
+  string namespace_id = 1;
+  string group_name = 2;
+  string data_id = 3;
+  string md5 = 4;
+}
+
+message ConfigChangedResponse {
+  bool changed = 1;
+  string content = 2;
+  string md5 = 3;
+}
+
+message HealthReportRequest {
+  string namespace_id = 1;
+  string group_name = 2;
+  string service_name = 3;
+  string ip = 4;
+  int32 port = 5;
+}
+
+message Response {
+  int32 code = 1;
+  string message = 2;
+}
+
+// ==================== Services ====================
+
+service NamingService {
+  rpc RegisterInstance(RegisterInstanceRequest) returns (Response);
+  rpc DeregisterInstance(DeregisterInstanceRequest) returns (Response);
+  rpc Heartbeat(HeartbeatRequest) returns (Response);
+  rpc GetInstances(InstanceQuery) returns (InstanceListResponse);
+}
+
+service ConfigService {
+  rpc GetConfig(ConfigQuery) returns (ConfigInfo);
+  rpc PublishConfig(ConfigPublishRequest) returns (Response);
+  rpc ListenConfig(ConfigListenRequest) returns (ConfigChangedResponse);
+}
+
+service HealthService {
+  rpc ReportFailure(HealthReportRequest) returns (Response);
+  rpc ReportSuccess(HealthReportRequest) returns (Response);
+}

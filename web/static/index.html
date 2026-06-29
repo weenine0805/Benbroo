@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benbroo Console</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#2d3436;height:100vh;overflow:hidden}
+a{cursor:pointer;text-decoration:none;color:inherit}
+
+/* ===== Layout ===== */
+.layout{display:flex;height:100vh}
+.sidebar{width:220px;background:#001529;color:#ffffffd9;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-logo{padding:20px 24px;font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;border-bottom:1px solid #ffffff15}
+.sidebar-menu{flex:1;padding:8px 0}
+.menu-item{padding:12px 24px;font-size:14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;color:#ffffffb3}
+.menu-item:hover{color:#fff;background:#ffffff0a}
+.menu-item.active{color:#fff;background:#1890ff}
+.menu-group-title{padding:12px 24px 6px;font-size:12px;color:#ffffff40;text-transform:uppercase;letter-spacing:1px}
+.menu-sub{padding-left:20px}
+.menu-sub .menu-item{padding:10px 24px;font-size:13px}
+.menu-toggle{display:flex;align-items:center;justify-content:space-between}
+.menu-toggle .arrow{transition:transform .2s;font-size:10px}
+.menu-toggle .arrow.open{transform:rotate(90deg)}
+
+/* ===== Content ===== */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{background:#fff;padding:0 24px;height:56px;display:flex;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.08);z-index:1}
+.header h2{font-size:16px;font-weight:600;color:#2d3436}
+.main{flex:1;overflow-y:auto;padding:24px}
+
+/* ===== Cards & Tables ===== */
+.card{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:20px;margin-bottom:20px}
+.card h3{font-size:15px;margin-bottom:16px;color:#2d3436;border-bottom:1px solid #f0f0f0;padding-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat{background:#fff;border-radius:8px;padding:24px 20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat .num{font-size:36px;font-weight:700;color:#1890ff;line-height:1.2}
+.stat .label{font-size:13px;color:#8c8c8c;margin-top:6px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #f0f0f0;font-size:13px}
+th{background:#fafafa;font-weight:600;color:#8c8c8c}
+tr:hover{background:#fafafa}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-ok{background:#52c41a20;color:#52c41a}
+.badge-err{background:#ff4d4f20;color:#ff4d4f}
+.badge-warn{background:#faad1440;color:#fa8c16}
+.badge-info{background:#1890ff20;color:#1890ff}
+.btn{padding:6px 18px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s}
+.btn-primary{background:#1890ff;color:#fff}
+.btn-danger{background:#ff4d4f;color:#fff}
+.btn-sm{padding:4px 12px;font-size:12px}
+.btn:hover{opacity:.85}
+input,textarea,select{padding:8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:13px;width:100%;transition:border-color .2s}
+input:focus,textarea:focus{outline:none;border-color:#1890ff;box-shadow:0 0 0 2px #1890ff20}
+.form-row{display:flex;gap:12px;margin-bottom:14px;align-items:center}
+.form-row label{min-width:110px;font-size:13px;font-weight:500;color:#595959}
+.form-row input,.form-row textarea,.form-row select{flex:1}
+.hidden{display:none}
+.toolbar{display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.toolbar input{max-width:220px}
+.toolbar select{max-width:180px;width:auto}
+.tag{display:inline-block;background:#f0f0f0;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:4px;color:#595959}
+pre{background:#fafafa;border:1px solid #f0f0f0;padding:14px;border-radius:6px;font-size:12px;overflow:auto;max-height:320px}
+.empty{text-align:center;padding:40px;color:#bfbfbf;font-size:14px}
+
+/* ===== Icons (SVG inline) ===== */
+.icon{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+
+/* ===== Login Page (removed) ===== */
+
+/* ===== Header right section ===== */
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+</style>
+</head>
+<body>
+<!-- Main Layout -->
+<div class="layout" id="main-layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">Benbroo</div>
+    <div class="sidebar-menu">
+      <div class="menu-item active" onclick="showPage('dashboard')" id="menu-dashboard">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="menu-item" onclick="showPage('configs')" id="menu-configs">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
+        <span>Configuration</span>
+      </div>
+      <div class="menu-item menu-toggle" onclick="toggleSubMenu('service')" id="menu-service">
+        <div style="display:flex;align-items:center;gap:10px">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-12v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+          <span>Service Mgmt</span>
+        </div>
+        <span class="arrow" id="arrow-service">&#9654;</span>
+      </div>
+      <div class="menu-sub hidden" id="submenu-service">
+        <div class="menu-item" onclick="showPage('services')" id="menu-services">
+          <span>Service List</span>
+        </div>
+        <div class="menu-item" onclick="showPage('subscribers')" id="menu-subscribers">
+          <span>Subscriber List</span>
+        </div>
+      </div>
+      <div class="menu-item" onclick="showPage('namespaces')" id="menu-namespaces">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+        <span>Namespace</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="header">
+      <h2 id="page-title">Dashboard</h2>
+    </div>
+    <div class="main" id="app"></div>
+  </div>
+</div>
+
+<script>
+const API = '/v1';
+let currentPage = 'dashboard';
+let subMenus = { service: false };
+
+const pageTitles = {
+  dashboard: 'Dashboard',
+  configs: 'Configuration Management',
+  services: 'Service List',
+  subscribers: 'Subscriber List',
+  namespaces: 'Namespace Management',
+};
+
+// Show console directly (no login)
+showPage('dashboard');
+
+function toggleSubMenu(name) {
+  subMenus[name] = !subMenus[name];
+  const sub = document.getElementById('submenu-' + name);
+  const arrow = document.getElementById('arrow-' + name);
+  if (subMenus[name]) {
+    sub.classList.remove('hidden');
+    arrow.classList.add('open');
+  } else {
+    sub.classList.add('hidden');
+    arrow.classList.remove('open');
+  }
+}
+
+function showPage(page) {
+  currentPage = page;
+  // Update active menu
+  document.querySelectorAll('.menu-item').forEach(a => a.classList.remove('active'));
+  const menuEl = document.getElementById('menu-' + page);
+  if (menuEl) menuEl.classList.add('active');
+  // Ensure parent submenu is open
+  if (page === 'services' || page === 'subscribers') {
+    if (!subMenus.service) toggleSubMenu('service');
+    var menuPageEl = document.getElementById('menu-' + page);
+    if (menuPageEl) menuPageEl.classList.add('active');
+  }
+  // Update page title
+  document.getElementById('page-title').textContent = pageTitles[page] || page;
+  // Render page
+  switch(page) {
+    case 'dashboard': renderDashboard(); break;
+    case 'services': renderServices(); break;
+    case 'subscribers': renderSubscribers(); break;
+    case 'configs': renderConfigs(); break;
+    case 'namespaces': renderNamespaces(); break;
+  }
+}
+
+async function api(path, opts) {
+  if (!opts) opts = {};
+  if (!opts.headers) opts.headers = {};
+  const resp = await fetch(API + path, opts);
+  return resp.json();
+}
+
+function el(tag, attrs, ...children) {
+  const e = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => {
+    if (k === 'onclick') e.onclick = v;
+    else if (k === 'innerHTML') e.innerHTML = v;
+    else e.setAttribute(k, v);
+  });
+  children.flat().forEach(c => {
+    if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+    else if (c) e.appendChild(c);
+  });
+  return e;
+}
+
+// ==================== Dashboard ====================
+async function renderDashboard() {
+  const data = await api('/console/dashboard');
+  const d = data.data || {};
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const stats = el('div', {class:'stats'},
+    stat(d.serviceCount || 0, 'Services', '#1890ff'),
+    stat(d.instanceCount || 0, 'Instances', '#52c41a'),
+    stat(d.configCount || 0, 'Configs', '#fa8c16'),
+    stat((d.clusterNodes || []).length, 'Cluster Nodes', '#722ed1'),
+  );
+  app.appendChild(stats);
+
+  const clusterCard = el('div', {class:'card'});
+  clusterCard.appendChild(el('h3', {}, 'Cluster Nodes'));
+  const table = el('table');
+  table.innerHTML = '<thead><tr><th>Address</th><th>State</th><th>Role</th><th>Last Beat</th></tr></thead>';
+  const tbody = el('tbody');
+  (d.clusterNodes || []).forEach(n => {
+    const isLeader = d.isLeader && n.address === d.selfAddr;
+    tbody.appendChild(el('tr', {},
+      el('td', {}, n.address),
+      el('td', {innerHTML: n.state === 'UP' ? '<span class="badge badge-ok">UP</span>' : '<span class="badge badge-err">DOWN</span>'}),
+      el('td', {innerHTML: isLeader ? '<span class="badge badge-info">Leader</span>' : ''}),
+      el('td', {}, n.lastBeat ? new Date(n.lastBeat).toLocaleString() : '-'),
+    ));
+  });
+  if ((d.clusterNodes||[]).length === 0) {
+    tbody.appendChild(el('tr', {}, el('td', {colspan:'4', class:'empty'}, 'No cluster nodes')));
+  }
+  table.appendChild(tbody);
+  clusterCard.appendChild(table);
+  app.appendChild(clusterCard);
+}
+
+function stat(num, label, color) {
+  return el('div', {class:'stat'},
+    el('div', {class:'num', style:'color:'+color}, String(num)),
+    el('div', {class:'label'}, label)
+  );
+}
+
+// ==================== Services ====================
+async function renderServices() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const card = el('div', {class:'card'});
+  card.appendChild(el('h3', {}, 'Service List'));
+
+  const toolbar = el('div', {class:'toolbar'});
+  const nsInput = el('input', {placeholder:'Namespace ID', id:'svc-ns', value:'public'});
+  const groupInput = el('input', {placeholder:'Group (optional)', id:'svc-group'});
+  const searchBtn = el('button', {class:'btn btn-primary', onclick:()=>loadServices()}, 'Search');
+  toolbar.append(nsInput, groupInput, searchBtn);
+  card.appendChild(toolbar);
+
+  const tableWrap = el('div', {id:'svc-table'});
+  card.appendChild(tableWrap);
+  app.appendChild(card);
+  loadServices();
+}
+
+async function loadServices() {
+  const ns = document.getElementById('svc-ns')?.value || 'public';
+  const group = document.getElementById('svc-group')?.value || '';
+  let url = '/ns/service/list?namespaceId=' + encodeURIComponent(ns) + '&pageNo=1&pageSize=100';
+  if (group) url += '&groupName=' + encodeURIComponent(group);
+  const data = await api(url);
+  const wrap = document.getElementById('svc-table');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const table = el('table');
+  table.innerHTML = '<thead><tr><th>Service Name</th><th>Group</th><th>Instances</th><th>Healthy</th><th>Health Check</th><th>Actions</th></tr></thead>';
+  const tbody = el('tbody');
+  (data.doms || []).forEach(svc => {
+    const hcType = svc.healthCheckType || 'NONE';
+    const total = svc.instanceCount || 0;
+    const healthy = svc.healthyCount || 0;
+    const healthBadge = total === 0
+      ? '<span class="badge">0 / 0</span>'
+      : healthy === total
+        ? '<span class="badge badge-ok">' + healthy + ' / ' + total + '</span>'
+        : healthy > 0
+          ? '<span class="badge badge-warn">' + healthy + ' / ' + total + '</span>'
+          : '<span class="badge badge-err">' + healthy + ' / ' + total + '</span>';
+    tbody.appendChild(el('tr', {},
+      el('td', {innerHTML: '<strong>' + (svc.serviceName || '-') + '</strong>'}),
+      el('td', {}, svc.groupName || 'DEFAULT_GROUP'),
+      el('td', {innerHTML: '<span class="badge badge-info">' + total + '</span>'}),
+      el('td', {innerHTML: healthBadge}),
+      el('td', {innerHTML: hcType !== 'NONE' ? '<span class="badge badge-info">' + hcType + '</span>' : '<span class="badge">' + hcType + '</span>'}),
+      el('td', {}, el('button', {class:'btn btn-primary btn-sm', onclick:()=>viewService(svc)}, 'Details')),
+    ));
+  });
+  if ((data.doms||[]).length === 0) {
+    tbody.appendChild(el('tr', {}, el('td', {colspan:'6', class:'empty'}, 'No services found')));
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+async function viewService(svc) {
+  const data = await api('/ns/service?namespaceId='+encodeURIComponent(svc.namespaceId||'public')+'&groupName='+encodeURIComponent(svc.groupName||'DEFAULT_GROUP')+'&serviceName='+encodeURIComponent(svc.serviceName));
+  const d = data.data || {};
+  const svcInfo = d.service || {};
+  const hosts = d.hosts || [];
+  const healthyNum = hosts.filter(h => h.healthy).length;
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  // Header with back button
+  const header = el('div', {style:'margin-bottom:20px'});
+  header.appendChild(el('button', {class:'btn', style:'border:1px solid #d9d9d9', onclick:()=>showPage('services')}, '← Back'));
+  app.appendChild(header);
+
+  // Stats cards
+  const statsRow = el('div', {class:'stats', style:'grid-template-columns:repeat(4,1fr)'})
+  statsRow.appendChild(stat(hosts.length, 'Total Instances', '#1890ff'));
+  statsRow.appendChild(stat(healthyNum, 'Healthy', '#52c41a'));
+  statsRow.appendChild(stat(hosts.length - healthyNum, 'Unhealthy', '#ff4d4f'));
+  statsRow.appendChild(stat(hosts.filter(h => h.enabled).length, 'Enabled', '#fa8c16'));
+  app.appendChild(statsRow);
+
+  // Service info card
+  const infoCard = el('div', {class:'card'});
+  infoCard.appendChild(el('h3', {}, 'Service Information'));
+  const hcType = svcInfo.healthCheckType || 'NONE';
+  const hcProto = svcInfo.healthCheckProto || 'TCP';
+  infoCard.innerHTML += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">' +
+    '<div class="detail-item"><span class="tag">Service Name</span> <strong>' + (svcInfo.serviceName||svc.serviceName||'-') + '</strong></div>' +
+    '<div class="detail-item"><span class="tag">Namespace</span> ' + (svcInfo.namespaceId||svc.namespaceId||'public') + '</div>' +
+    '<div class="detail-item"><span class="tag">Group</span> ' + (svcInfo.groupName||svc.groupName||'DEFAULT_GROUP') + '</div>' +
+    '<div class="detail-item"><span class="tag">Protect Threshold</span> ' + (svcInfo.protectThreshold||0) + '</div>' +
+    '<div class="detail-item"><span class="tag">Health Check</span> <span class="badge ' + (hcType!=='NONE'?'badge-info':'') + '">' + hcType + '</span></div>' +
+    (hcType !== 'NONE' ? '<div class="detail-item"><span class="tag">Protocol</span> ' + hcProto + (svcInfo.healthCheckPath ? ' (' + svcInfo.healthCheckPath + ')' : '') + '</div>' : '') +
+    (svcInfo.passiveThreshold ? '<div class="detail-item"><span class="tag">Passive Threshold</span> ' + svcInfo.passiveThreshold + '</div>' : '') +
+    (svcInfo.passiveWindow ? '<div class="detail-item"><span class="tag">Passive Window</span> ' + svcInfo.passiveWindow + 's</div>' : '') +
+    '</div>';
+  if (svcInfo.metadata && svcInfo.metadata !== '{}') {
+    infoCard.innerHTML += '<div style="margin-top:12px"><span class="tag">Metadata</span><pre style="margin-top:6px">' + svcInfo.metadata + '</pre></div>';
+  }
+  app.appendChild(infoCard);
+
+  // Instances table card
+  const instCard = el('div', {class:'card'});
+  instCard.appendChild(el('h3', {}, 'Instances (' + hosts.length + ')'));
+  const table = el('table');
+  table.innerHTML = '<thead><tr><th>IP</th><th>Port</th><th>Weight</th><th>Healthy</th><th>Enabled</th><th>Cluster</th><th>Ephemeral</th><th>Last Beat</th></tr></thead>';
+  const tbody = el('tbody');
+  hosts.forEach(h => {
+    tbody.appendChild(el('tr', {},
+      el('td', {innerHTML: '<code>' + h.ip + '</code>'}),
+      el('td', {}, String(h.port)),
+      el('td', {}, String(h.weight)),
+      el('td', {innerHTML: h.healthy ? '<span class="badge badge-ok">Healthy</span>' : '<span class="badge badge-err">Unhealthy</span>'}),
+      el('td', {innerHTML: h.enabled ? '<span class="badge badge-ok">Yes</span>' : '<span class="badge badge-warn">No</span>'}),
+      el('td', {}, h.clusterName || 'DEFAULT'),
+      el('td', {innerHTML: h.ephemeral ? '<span class="badge badge-info">Yes</span>' : 'No'}),
+      el('td', {}, h.lastBeat ? new Date(h.lastBeat).toLocaleString() : '-'),
+    ));
+  });
+  if (hosts.length === 0) {
+    tbody.appendChild(el('tr', {}, el('td', {colspan:'8', class:'empty'}, 'No instances registered')));
+  }
+  table.appendChild(tbody);
+  instCard.appendChild(table);
+  app.appendChild(instCard);
+}
+
+// ==================== Subscribers ====================
+async function renderSubscribers() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const card = el('div', {class:'card'});
+  card.appendChild(el('h3', {}, 'Subscriber List'));
+  card.appendChild(el('div', {id:'sub-table'}));
+  app.appendChild(card);
+  loadSubscribers();
+}
+
+async function loadSubscribers() {
+  const data = await api('/console/subscribers');
+  const wrap = document.getElementById('sub-table');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const table = el('table');
+  table.innerHTML = '<thead><tr><th>Service Name</th><th>Group</th><th>Namespace</th><th>Subscriber Count</th></tr></thead>';
+  const tbody = el('tbody');
+  const list = data.data || [];
+  list.forEach(sub => {
+    tbody.appendChild(el('tr', {},
+      el('td', {innerHTML: '<strong>' + (sub.serviceName || '-') + '</strong>'}),
+      el('td', {}, sub.groupName || 'DEFAULT_GROUP'),
+      el('td', {}, sub.namespaceId || 'public'),
+      el('td', {innerHTML: '<span class="badge badge-info">' + (sub.subscriberCount || 0) + '</span>'}),
+    ));
+  });
+  if (list.length === 0) {
+    tbody.appendChild(el('tr', {}, el('td', {colspan:'4', class:'empty'}, 'No active subscribers')));
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+// ==================== Configs ====================
+async function renderConfigs() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const card = el('div', {class:'card'});
+  card.appendChild(el('h3', {}, 'Configuration List'));
+
+  const toolbar = el('div', {class:'toolbar'});
+  const nsInput = el('input', {placeholder:'Namespace', id:'cfg-ns', value:'public'});
+  const searchBtn = el('button', {class:'btn btn-primary', onclick:()=>loadConfigs()}, 'Search');
+  const addBtn = el('button', {class:'btn btn-primary', onclick:()=>showAddConfig()}, '+ New Config');
+  toolbar.append(nsInput, searchBtn, addBtn);
+  card.appendChild(toolbar);
+  card.appendChild(el('div', {id:'cfg-table'}));
+  app.appendChild(card);
+  loadConfigs();
+}
+
+async function loadConfigs() {
+  const ns = document.getElementById('cfg-ns')?.value || 'public';
+  const data = await api('/cs/configs/list?tenant=' + encodeURIComponent(ns) + '&pageNo=1&pageSize=100');
+  const wrap = document.getElementById('cfg-table');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const table = el('table');
+  table.innerHTML = '<thead><tr><th>Data ID</th><th>Group</th><th>Type</th><th>MD5</th><th>Actions</th></tr></thead>';
+  const tbody = el('tbody');
+  (data.pageItems || []).forEach(cfg => {
+    tbody.appendChild(el('tr', {},
+      el('td', {innerHTML: '<strong>' + cfg.dataId + '</strong>'}),
+      el('td', {}, cfg.groupName),
+      el('td', {}, cfg.type || 'text'),
+      el('td', {innerHTML: '<code>' + (cfg.md5||'').substring(0,12) + '...</code>'}),
+      el('td', {},
+        el('button', {class:'btn btn-primary btn-sm', style:'margin-right:6px', onclick:()=>viewConfig(cfg)}, 'View'),
+        el('button', {class:'btn btn-danger btn-sm', onclick:()=>deleteConfig(cfg)}, 'Delete'),
+      ),
+    ));
+  });
+  if ((data.pageItems||[]).length === 0) {
+    tbody.appendChild(el('tr', {}, el('td', {colspan:'5', class:'empty'}, 'No configs found')));
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+function showAddConfig() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const card = el('div', {class:'card'});
+  card.appendChild(el('h3', {}, 'New Configuration'));
+  card.innerHTML += `
+    <div class="form-row"><label>Namespace</label><input id="new-cfg-ns" value="public"></div>
+    <div class="form-row"><label>Group</label><input id="new-cfg-group" value="DEFAULT_GROUP"></div>
+    <div class="form-row"><label>Data ID</label><input id="new-cfg-dataid" placeholder="application.yaml"></div>
+    <div class="form-row"><label>Type</label><select id="new-cfg-type"><option>text</option><option>yaml</option><option>json</option><option>xml</option><option>properties</option></select></div>
+    <div class="form-row"><label>Content</label><textarea id="new-cfg-content" rows="12" placeholder="Config content..."></textarea></div>
+    <div class="form-row"><label></label><div><button class="btn btn-primary" onclick="publishConfig()">Publish</button><button class="btn" onclick="showPage('configs')" style="margin-left:8px;border:1px solid #d9d9d9">Cancel</button></div></div>
+  `;
+  app.appendChild(card);
+}
+
+async function publishConfig() {
+  const body = new URLSearchParams({
+    tenant: document.getElementById('new-cfg-ns').value,
+    group: document.getElementById('new-cfg-group').value,
+    dataId: document.getElementById('new-cfg-dataid').value,
+    type: document.getElementById('new-cfg-type').value,
+    content: document.getElementById('new-cfg-content').value,
+  });
+  await api('/cs/configs', {method:'POST', body, headers:{'Content-Type':'application/x-www-form-urlencoded'}});
+  showPage('configs');
+}
+
+async function viewConfig(cfg) {
+  const data = await api('/cs/configs?tenant='+encodeURIComponent(cfg.namespaceId)+'&group='+encodeURIComponent(cfg.groupName)+'&dataId='+encodeURIComponent(cfg.dataId));
+  const item = data.data || {};
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const card = el('div', {class:'card'});
+  card.appendChild(el('h3', {}, 'Config: ' + cfg.dataId));
+  card.innerHTML += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+    <div><span class="tag">Group</span> ${cfg.groupName}</div>
+    <div><span class="tag">Type</span> ${cfg.type||'text'}</div>
+    <div><span class="tag">MD5</span> <code>${cfg.md5||''}</code></div>
+    </div>`;
+  const pre = el('pre', {}, item.content || '(empty)');
+  card.appendChild(pre);
+  card.appendChild(el('button', {class:'btn btn-primary', style:'margin-top:14px', onclick:()=>showPage('configs')}, 'Back'));
+  app.appendChild(card);
+}
+
+async function deleteConfig(cfg) {
+  if (!confirm('Delete config ' + cfg.dataId + '?')) return;
+  await api('/cs/configs?tenant='+encodeURIComponent(cfg.namespaceId)+'&group='+encodeURIComponent(cfg.groupName)+'&dataId='+encodeURIComponent(cfg.dataId), {method:'DELETE'});
+  loadConfigs();
+}
+
+// ==================== Namespaces ====================
+async function renderNamespaces() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const card = el('div', {class:'card'});
+  card.appendChild(el('h3', {}, 'Namespace List'));
+  const addBtn = el('button', {class:'btn btn-primary', onclick:()=>showAddNamespace(), style:'margin-bottom:16px'}, '+ New Namespace');
+  card.appendChild(addBtn);
+  card.appendChild(el('div', {id:'ns-table'}));
+  app.appendChild(card);
+  loadNamespaces();
+}
+
+async function loadNamespaces() {
+  const data = await api('/console/namespaces');
+  const wrap = document.getElementById('ns-table');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const table = el('table');
+  table.innerHTML = '<thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead>';
+  const tbody = el('tbody');
+  (data.data || []).forEach(ns => {
+    tbody.appendChild(el('tr', {},
+      el('td', {innerHTML: '<strong>' + ns.id + '</strong>'}),
+      el('td', {}, ns.name),
+      el('td', {}, ns.description || '-'),
+      el('td', {},
+        ns.id !== 'public' ? el('button', {class:'btn btn-danger btn-sm', onclick:()=>deleteNamespace(ns.id)}, 'Delete') : el('span', {class:'badge badge-info'}, 'Default'),
+      ),
+    ));
+  });
+  if ((data.data||[]).length === 0) {
+    tbody.appendChild(el('tr', {}, el('td', {colspan:'4', class:'empty'}, 'No namespaces')));
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+function showAddNamespace() {
+  const id = prompt('Namespace ID (e.g. dev):');
+  if (!id) return;
+  const name = prompt('Namespace Name:');
+  if (!name) return;
+  const desc = prompt('Description (optional):') || '';
+  const body = new URLSearchParams({customNamespaceId:id, namespaceName:name, namespaceDesc:desc});
+  api('/console/namespaces', {method:'POST', body, headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(()=>loadNamespaces());
+}
+
+async function deleteNamespace(id) {
+  if (!confirm('Delete namespace ' + id + '?')) return;
+  await api('/console/namespaces?namespaceId='+encodeURIComponent(id), {method:'DELETE'});
+  loadNamespaces();
+}
+
+// Init
+showPage('dashboard');
+</script>
+</body>
+</html>

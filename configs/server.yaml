@@ -1,0 +1,45 @@
+server:
+  port: 8848               # HTTP REST API port
+  grpcPort: 9848           # gRPC port (default: HTTP + 1000)
+  dnsPort: 8553            # DNS service port (UDP + TCP)
+  tcpPort: 6848            # Raw TCP Socket port (default: HTTP - 2000)
+  host: "0.0.0.0"
+
+auth:
+  username: "benbroo"
+  password: "benbroo"
+  secretKey: "benbroo-secret-key-2024"
+  tokenTTL: 86400          # token expiry in seconds (24h)
+
+mysql:
+  host: "127.0.0.1"         # MySQL server host
+  port: 3306               # MySQL server port
+  username: "root"          # MySQL username
+  password: "han2307,,"      # MySQL password
+  database: "benbroo"       # Database name (auto-created if not exists)
+  charset: "utf8mb4"       # Character set
+  maxIdleConns: 10          # Max idle connections in pool
+  maxOpenConns: 100         # Max open connections in pool
+  # If dsn is set, it overrides all individual fields above
+  # dsn: "root:password@tcp(127.0.0.1:3306)/benbroo?charset=utf8mb4&parseTime=True&loc=Local"
+
+cluster:
+  selfAddr: "127.0.0.1:8848"
+  members:
+    - "127.0.0.1:8848"
+
+health:
+  # --- Active Check (server-side probing) ---
+  checkInterval: 5        # default active probe interval (seconds)
+  failThreshold: 3        # consecutive active failures before marking unhealthy
+  recoveryThreshold: 3    # consecutive successes to recover
+  activeTimeout: 3        # active probe request timeout (seconds)
+  removeTimeout: 30       # heartbeat timeout (seconds)
+
+  # --- Passive Check (consumer-side reporting) ---
+  passiveWindow: 60       # sliding window for passive failure counting (seconds)
+  passiveThreshold: 5     # failures within window to mark unhealthy
+
+log:
+  level: "info"
+  output: "stdout"
